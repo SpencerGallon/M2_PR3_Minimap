@@ -1,77 +1,76 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyBehavior : MonoBehaviour
 {
-    public Transform player;
-    public Transform patrolRoute;
-    public List<Transform> locations;
-    private int locationIndex = 0;
+    [SerializeField] private Transform player;
+    [SerializeField] private Transform patrolRoute;
+    [SerializeField] private int lives = 3;
+
+    private readonly List<Transform> locations = new List<Transform>();
+    private int locationIndex;
     private NavMeshAgent agent;
-    private int _lives = 3;
-    public int EnemyLives
-    {
-        get { return _lives; }
-        private set
-        {
-            _lives = value;
-            if (_lives <= 0)
-            {
-                Destroy(this.gameObject);
-                Debug.Log("Enemy down.");
-            }
-        }
-    }
-    void Start()
+
+    private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        player = GameObject.Find("Player").transform;
+        player = GameObject.FindWithTag("Player").transform;
         InitializePatrolRoute();
-        MoveToNextPatrolLocation();
     }
-    void Update()
+
+    private void InitializePatrolRoute()
     {
-        if(agent.remainingDistance < 0.2f && !agent.pathPending)
-        {
-            MoveToNextPatrolLocation();
-        }
-    }
-    void InitializePatrolRoute()
-    {
-        foreach(Transform child in patrolRoute)
+        foreach (Transform child in patrolRoute)
         {
             locations.Add(child);
         }
     }
-    void MoveToNextPatrolLocation()
+
+    private void MoveToNextPatrolLocation()
     {
         if (locations.Count == 0) return;
-        agent.destination = locations[locationIndex].position;
+        agent.SetDestination(locations[locationIndex].position);
         locationIndex = (locationIndex + 1) % locations.Count;
     }
-    void OnTriggerEnter(Collider other)
+
+    private void Update()
     {
-        if(other.name == "Player")
+        if (agent.remainingDistance < 0.2f && !agent.pathPending)
         {
-            agent.destination = player.position;
+            MoveToNextPatrolLocation();
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            agent.SetDestination(player.position);
             Debug.Log("Player detected - attack!");
         }
     }
-    void OnTriggerExit(Collider other)
+
+    private void OnTriggerExit(Collider other)
     {
-        if(other.name == "Player")
+        if (other.CompareTag("Player"))
         {
             Debug.Log("Player out of range, resume patrol");
+            MoveToNextPatrolLocation();
         }
     }
-    void OnCollisionEnter(Collision collision)
+
+    private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.name == "Bullet(Clone)")
+        if (collision.gameObject.CompareTag("bullet"))
         {
-            EnemyLives -= 1;
+            lives--;
             Debug.Log("Critical hit!");
+            if (lives <= 0)
+            {
+                Debug.Log("Enemy down.");
+                Destroy(gameObject);
+            }
         }
     }
 }

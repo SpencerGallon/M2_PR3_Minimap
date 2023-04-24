@@ -32,27 +32,12 @@ public class PlayerBehavior : MonoBehaviour
         vInput = Input.GetAxis("Vertical") * moveSpeed;
 
         hInput = Input.GetAxis("Horizontal") * rotateSpeed;
-        /*
-        this.transform.Translate(Vector3.forward * vInput * Time.deltaTime);
-        this.transform.Rotate(Vector3.up * hInput * Time.deltaTime);
-        */
-    }
 
-    void FixedUpdate()
-    {
         if(IsGrounded() && Input.GetKeyDown(KeyCode.Space))
         {
             _rb.AddForce(Vector3.up * jumpVelocity, ForceMode.Impulse);
             playerJump();
         }
-
-        Vector3 rotation = Vector3.up * hInput;
-
-        Quaternion angleRot = Quaternion.Euler(rotation * Time.fixedDeltaTime);
-
-        _rb.MovePosition(this.transform.position + this.transform.forward * vInput * Time.fixedDeltaTime);
-
-        _rb.MoveRotation(_rb.rotation * angleRot);
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -64,6 +49,17 @@ public class PlayerBehavior : MonoBehaviour
         }
     }
 
+    void FixedUpdate()
+    {
+        Vector3 rotation = Vector3.up * hInput;
+
+        Quaternion angleRot = Quaternion.Euler(rotation * Time.fixedDeltaTime);
+
+        _rb.MovePosition(this.transform.position + this.transform.forward * vInput * Time.fixedDeltaTime);
+
+        _rb.MoveRotation(_rb.rotation * angleRot);
+    }
+
     private bool IsGrounded()
     {
         Vector3 capsuleBottom = new Vector3(_col.bounds.center.x, _col.bounds.min.y, _col.bounds.center.z);
@@ -72,6 +68,7 @@ public class PlayerBehavior : MonoBehaviour
 
         return grounded;
     }
+
     void OnCollisionEnter(Collision collision)
     {
         if(collision.gameObject.name == "Enemy")
